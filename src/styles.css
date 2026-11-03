@@ -738,3 +738,245 @@ button { cursor: pointer; }
   .cursor-trail-layer { display: none; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+
+/* Landing surface: a lighter, glassy portfolio frame around the existing XP windows. */
+.desktop {
+  background-color: #75b9df;
+}
+
+.wallpaper-motion {
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.desktop-vignette {
+  inset: 0 0 28px;
+  background:
+    linear-gradient(180deg, rgba(16, 71, 125, .18), transparent 24%, transparent 67%, rgba(18, 59, 57, .12)),
+    radial-gradient(circle at 50% 48%, transparent 42%, rgba(20, 69, 91, .14) 100%);
+}
+
+.desktop-label {
+  top: 14px;
+  left: 16px;
+  gap: 7px;
+  color: rgba(255,255,255,.9);
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+
+.desktop-hero {
+  top: calc(50% + 28px);
+  width: min(690px, calc(100vw - 28px));
+  height: min(650px, calc(100svh - 48px));
+  margin: 0;
+}
+
+.hero-portrait {
+  width: clamp(184px, 18vw, 242px);
+  height: clamp(360px, 62svh, 455px);
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(228,250,255,.28), rgba(62,151,172,.14));
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 17px 17px 11px 11px;
+  box-shadow: 0 22px 50px rgba(6, 51, 74, .27), inset 0 1px 0 rgba(255,255,255,.56), inset 0 0 28px rgba(255,255,255,.08);
+  backdrop-filter: blur(4px) saturate(1.1);
+}
+
+.hero-portrait::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 3;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.hero-portrait::after {
+  background: linear-gradient(180deg, rgba(6,44,77,0) 42%, rgba(4,34,60,.42) 100%);
+}
+
+.hero-portrait img {
+  object-fit: contain;
+  object-position: center bottom;
+  padding: 8px 4px 0;
+  filter: drop-shadow(0 7px 11px rgba(9, 51, 68, .18));
+}
+
+.portrait-orbit {
+  width: 330px;
+  height: 330px;
+  left: 50%;
+  top: 3px;
+  transform: translateX(-50%);
+  opacity: .62;
+}
+
+.portrait-label {
+  bottom: 13px;
+  color: rgba(255,255,255,.92);
+  letter-spacing: .11em;
+}
+
+.hero-copy {
+  top: clamp(265px, 42svh, 330px);
+  bottom: auto;
+  width: min(550px, calc(100vw - 24px));
+  text-shadow: 0 2px 9px rgba(6,39,69,.68), 0 0 18px rgba(12,77,108,.28);
+}
+
+.hero-copy h1 {
+  margin: 6px 0 3px;
+}
+
+.hero-hello {
+  color: #e9ff59;
+  font-size: clamp(11px, 1.35vw, 16px);
+  letter-spacing: .2em;
+}
+
+.hero-name {
+  margin-top: 5px;
+  color: #f8f8f3;
+  font-size: clamp(48px, 6.8vw, 82px);
+}
+
+.hero-role {
+  margin-top: 11px;
+  color: rgba(255,255,255,.9);
+  font-size: clamp(9px, .95vw, 12px);
+  letter-spacing: .13em;
+}
+
+.desktop-icons {
+  top: clamp(385px, 66svh, 515px);
+  gap: 7px;
+}
+
+.desktop-icon {
+  width: 84px;
+  min-height: 81px;
+  padding: 5px 3px 4px;
+  background: linear-gradient(180deg, rgba(12, 75, 111, .38), rgba(5, 47, 79, .25));
+  border-color: rgba(226,247,255,.47);
+  border-radius: 6px;
+  box-shadow: inset 0 1px rgba(255,255,255,.24), 0 5px 12px rgba(0, 35, 56, .2);
+  backdrop-filter: blur(5px) saturate(1.1);
+}
+
+.desktop-icon:hover,
+.desktop-icon:focus-visible {
+  background: linear-gradient(180deg, rgba(55, 151, 201, .62), rgba(14, 88, 128, .55));
+}
+
+.desktop-icon-art {
+  width: 46px;
+  height: 44px;
+  border-radius: 10px 6px 10px 6px;
+}
+
+.desktop-icon-label {
+  font-size: 10px;
+  line-height: 1.12;
+  text-shadow: 1px 2px 3px rgba(0, 24, 48, .98), 0 0 5px rgba(0,0,0,.65);
+}
+
+.taskbar {
+  left: 50%;
+  right: auto;
+  bottom: 10px;
+  width: min(610px, calc(100vw - 24px));
+  height: 34px;
+  padding: 0 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(226,247,255,.34);
+  border-radius: 17px;
+  background: rgba(5, 53, 78, .27);
+  box-shadow: 0 8px 22px rgba(0, 36, 53, .2), inset 0 1px rgba(255,255,255,.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.start-button {
+  width: 84px;
+  height: 29px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 14px;
+  background: rgba(28, 117, 111, .5);
+  box-shadow: inset 0 1px rgba(255,255,255,.24), 0 2px 5px rgba(0,0,0,.16);
+  text-shadow: 0 1px 2px rgba(0,0,0,.7);
+}
+
+.start-button:hover,
+.start-button-active {
+  background: rgba(56, 159, 137, .72);
+  filter: none;
+}
+
+.start-button i { font-size: 14px; }
+.quick-launch { height: 26px; padding: 0 6px; border-right-color: rgba(255,255,255,.2); box-shadow: none; }
+.quick-launch button:hover { background: rgba(255,255,255,.16); }
+.taskbar-apps { gap: 4px; padding: 0 5px; }
+.taskbar-app { min-width: 94px; height: 26px; border-color: rgba(255,255,255,.24); border-radius: 13px; background: rgba(15, 88, 123, .36); box-shadow: inset 0 1px rgba(255,255,255,.15); }
+.taskbar-app-active { background: rgba(8, 60, 91, .66); }
+.system-tray { width: 92px; height: 27px; padding: 0 5px; border: 0; border-radius: 14px; background: rgba(4, 50, 75, .34); box-shadow: inset 0 1px rgba(255,255,255,.12); }
+.tray-clock { font-size: 10px; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.tray-clock small { font-size: 7px; }
+
+@media (max-width: 760px) {
+  .desktop-hero {
+    width: calc(100vw - 18px);
+    height: 510px;
+  }
+
+  .hero-portrait {
+    width: clamp(176px, 31vw, 212px);
+    height: clamp(350px, 58svh, 430px);
+  }
+
+  .hero-copy { top: 270px; }
+  .desktop-icons { top: 405px; }
+}
+
+@media (max-width: 520px) {
+  .desktop-label { top: 11px; left: 10px; font-size: 7px; }
+
+  .desktop-hero {
+    width: calc(100vw - 12px);
+    height: 470px;
+    top: 58%;
+  }
+
+  .hero-portrait {
+    width: 178px;
+    height: 405px;
+    border-radius: 15px 15px 10px 10px;
+  }
+
+  .portrait-orbit { width: 290px; height: 290px; }
+  .hero-copy { top: 235px; }
+  .hero-hello { font-size: 10px; }
+  .hero-name { font-size: clamp(42px, 11vw, 54px); }
+  .hero-role { margin-top: 9px; font-size: 8px; letter-spacing: .1em; }
+  .desktop-icons { top: 377px; gap: 4px; }
+  .desktop-icon { width: 69px; min-height: 72px; }
+  .desktop-icon-art { width: 42px; height: 40px; }
+  .desktop-icon-label { font-size: 9px; }
+
+  .taskbar {
+    bottom: 7px;
+    width: calc(100vw - 14px);
+    height: 30px;
+  }
+
+  .start-button { width: 67px; height: 25px; }
+  .start-button .ceazar-mark { width: 18px; height: 17px; }
+  .start-button i { font-size: 12px; }
+  .quick-launch { display: none; }
+  .taskbar-apps { gap: 2px; }
+  .taskbar-app { min-width: 0; flex: 1; height: 24px; padding: 0 6px; }
+  .taskbar-app span { font-size: 8px; }
+  .system-tray { width: 67px; }
+  .tray-icon { display: none; }
+  .tray-clock { font-size: 8px; }
+  .tray-clock small { display: none; }
+}
