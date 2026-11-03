@@ -62,6 +62,25 @@ const ASSETS = {
   resume: '/assets/Joshua_Ceazar_Lopez_Resume.pdf',
 };
 
+const imagePreloadCache = new Map<string, Promise<void>>();
+
+function preloadImage(src: string) {
+  const cached = imagePreloadCache.get(src);
+  if (cached) return cached;
+
+  const image = new window.Image();
+  image.decoding = 'async';
+  const promise = new Promise<void>((resolve) => {
+    const finish = () => resolve();
+    image.addEventListener('load', finish, { once: true });
+    image.addEventListener('error', finish, { once: true });
+    image.src = src;
+    if (image.complete) finish();
+  });
+  imagePreloadCache.set(src, promise);
+  return promise;
+}
+
 type RecentAppId = 'vscode' | 'codex' | 'spotify' | 'github' | 'chrome' | 'edge' | 'firefox';
 type RecentApp = { id: RecentAppId; label: string; detail: string };
 
@@ -243,6 +262,11 @@ const projects: Project[] = [
     techNote: { label: 'Application scope', detail: 'Authentication, admin and audit logs, CACS, Finance, Scholarship, UTPRAS, Leave and Overtime.' },
   },
 ];
+
+function warmProjectImages(project: Project) {
+  if (project.image) void preloadImage(project.image);
+  project.screenshots.forEach(({ src }) => void preloadImage(src));
+}
 
 const certificates = [
   { title: 'Introduction to Front-End Development', provider: 'Coursera', file: '/assets/intro-front-end.pdf', type: 'PDF' },
@@ -513,14 +537,14 @@ function ProjectsContent({ selectedProject, navigateProject, navigateBack, isVis
         <section className="project-gallery" aria-label={`${selected.title} screenshots`}>
           <div className={`project-gallery-stage${selected.id === 'noti-fire' ? ' project-gallery-stage-phone' : ' project-gallery-stage-landscape'}`}>
             <div className={`project-gallery-image-frame${selected.id === 'noti-fire' ? ' project-gallery-image-frame-phone' : ' project-gallery-image-frame-landscape'}`}>
-              <img src={slide.src} alt={slide.alt} />
+              <img src={slide.src} alt={slide.alt} decoding="async" fetchPriority="high" />
             </div>
             <button className="gallery-arrow gallery-previous" type="button" onClick={() => moveSlide(-1)} aria-label={`Previous ${selected.title} screenshot`}>‹</button>
             <button className="gallery-arrow gallery-next" type="button" onClick={() => moveSlide(1)} aria-label={`Next ${selected.title} screenshot`}>›</button>
           </div>
           <div className="project-gallery-caption" aria-live="polite"><span>{slide.label}</span><b>{String(activeSlide + 1).padStart(2, '0')} / {String(selected.screenshots.length).padStart(2, '0')}</b></div>
           <div className={`project-gallery-thumbnails${selected.id === 'noti-fire' ? ' project-gallery-thumbnails-phone' : ''}`} role="group" aria-label="Choose a project screenshot">
-            {selected.screenshots.map((screenshot, index) => <button className={activeSlide === index ? 'gallery-thumbnail gallery-thumbnail-active' : 'gallery-thumbnail'} type="button" key={screenshot.src} onClick={() => setActiveSlide(index)} aria-label={`Show screenshot ${index + 1}: ${screenshot.label}`} aria-pressed={activeSlide === index}><img src={screenshot.src} alt="" loading="lazy" /></button>)}
+            {selected.screenshots.map((screenshot, index) => <button className={activeSlide === index ? 'gallery-thumbnail gallery-thumbnail-active' : 'gallery-thumbnail'} type="button" key={screenshot.src} onClick={() => setActiveSlide(index)} aria-label={`Show screenshot ${index + 1}: ${screenshot.label}`} aria-pressed={activeSlide === index}><img src={screenshot.src} alt="" loading="lazy" decoding="async" /></button>)}
           </div>
           <div className="gallery-key-hint">Use ← → to browse · Esc or Explorer Back to return</div>
         </section>
@@ -534,7 +558,7 @@ function ProjectsContent({ selectedProject, navigateProject, navigateBack, isVis
       <aside className="task-pane projects-task-pane"><div className="task-pane-title">Project tasks <RetroIcon name="chevron-right" size={13} /></div><div className="task-pane-body"><b>Choose a project</b><p>Open a case file to see what it does and which tools were used.</p><div className="task-divider" /><b>Other places</b><div className="task-link"><RetroIcon name="folder" size={14} /> My documents</div><div className="task-link"><RetroIcon name="monitor" size={14} /> My computer</div></div></aside>
       <div className="projects-list-area"><div className="folder-titlebar"><RetroIcon name="folder-open" size={18} /><span>Selected work</span><span className="folder-count">{projects.length} items</span></div>
         {projects.map((project, index) => <article className="project-row" key={project.id} role="button" tabIndex={0} aria-label={`View ${project.title} ${project.stackGroups ? (project.screenshots.length ? 'screenshots and technology stack' : 'technology stack') : 'screenshots and case file'}`} title={project.stackGroups ? (project.screenshots.length ? 'Open screenshots and technology stack' : 'Open technology stack') : 'Open project screenshots'} onClick={() => { setActiveSlide(0); navigateProject(project.id); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActiveSlide(0); navigateProject(project.id); } }}>
-          {project.image ? <img src={project.image} alt={`${project.title} thumbnail`} /> : <div className="portfolio-project-thumb" aria-hidden="true"><CeazarMark /></div>}
+          {project.image ? <img src={project.image} alt={`${project.title} thumbnail`} loading="lazy" decoding="async" /> : <div className="portfolio-project-thumb" aria-hidden="true"><CeazarMark /></div>}
           <div className="project-row-copy"><div className="project-row-kicker">{project.kind}<span>{project.year}</span></div><h3>{project.title}</h3><p>{project.description}</p><div className="chip-row">{project.technologies.map((tech) => <span className="xp-chip" key={tech}>{tech}</span>)}</div></div><span className="details-button" aria-hidden="true"><span>{String(index + 1).padStart(2, '0')}</span><RetroIcon name="external-link" size={15} /></span></article>)}
         <div className="folder-status">{projects.length} objects · Selected projects from the portfolio</div>
       </div>
@@ -680,6 +704,8 @@ function App() {
   }, []);
 
   const navigateProject = useCallback((projectId: string | null) => {
+    const project = projects.find((candidate) => candidate.id === projectId);
+    if (project) warmProjectImages(project);
     setProjectHistory((current) => {
       if ((current.entries[current.index] ?? null) === projectId) return current;
       const entries = current.entries.slice(0, current.index + 1);
@@ -756,6 +782,11 @@ function App() {
   }, []);
 
   useEffect(() => {
+    void preloadImage(ASSETS.wallpaper);
+    void preloadImage(ASSETS.portrait);
+  }, []);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ') {
         if (startupStage === 'sleep') wakeComputer();
@@ -798,6 +829,7 @@ function App() {
   };
 
   const openWindow = (id: AppId) => {
+    if (id === 'projects') projects.forEach((project) => project.image && void preloadImage(project.image));
     if (windowStates[id].minimized || minimizeTimers.current[id] !== undefined) {
       restoreWindow(id);
       return;
@@ -918,7 +950,7 @@ function App() {
       <section className="desktop-hero" aria-label="Joshua Ceazar introduction">
         <div className="hero-portrait">
           <span className="portrait-orbit" />
-          <img src={ASSETS.portrait} alt="Joshua wearing a traditional barong shirt" />
+          <img src={ASSETS.portrait} alt="Joshua wearing a traditional barong shirt" loading="eager" decoding="async" fetchPriority="high" />
           <div className="portrait-label"><span>JC / 01</span><small>TAGUM CITY</small></div>
         </div>
         <div className="hero-copy">
