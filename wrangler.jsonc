@@ -11,8 +11,5 @@
   },
   "vars": {
     "VISITOR_LOOKBACK_DAYS": "180"
-  },
-  "secrets": {
-    "required": ["CF_API_TOKEN", "CF_ZONE_ID"]
   }
 }
