@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type TouchEvent as ReactTouchEvent } from 'react';
 import { RetroIcon, type RetroIconName } from './RetroIcon';
 import './styles.css';
 
@@ -61,6 +61,8 @@ const ASSETS = {
   wallpaper: '/assets/xp-bliss-hd.jpg',
   resume: '/assets/Joshua_Ceazar_Lopez_Resume.pdf',
 };
+const VISITOR_COUNTER_URL = 'https://counterapi.com/api/joshdesk-portfolio/view/site-visitors';
+const VISITOR_SESSION_KEY = 'ceazar-visitor-counted-v1';
 
 const imagePreloadCache = new Map<string, Promise<void>>();
 
@@ -129,11 +131,11 @@ const projects: Project[] = [
         { name: 'Pointer events', detail: 'Support window dragging and interactive desktop controls.' },
       ] },
       { title: 'Animation & interaction', kicker: 'MOTION SYSTEM', items: [
-        { name: 'Custom CSS keyframes and transitions', detail: 'Boot, window, wallpaper, cursor-trail and hover animations; no separate motion library.' },
+        { name: 'Custom CSS keyframes and transitions', detail: 'Boot, window, wallpaper and hover animations; no separate motion library.' },
       ] },
       { title: 'Styling & typography', kicker: 'VISUAL SYSTEM', items: [
         { name: 'Custom CSS3', detail: 'XP-inspired chrome, gradients, responsive layouts and reduced-motion rules.' },
-        { name: 'DM Sans · DM Mono · Playfair Display', detail: 'Interface, technical labels and display typography.' },
+        { name: 'DM Sans · DM Mono · Press Start 2P', detail: 'Interface, technical labels and pixel display typography.' },
       ] },
     ],
     techNote: { label: 'Motion & styling', detail: 'Custom CSS keyframes and transitions, with responsive rules for the animated desktop and windowed apps.' },
@@ -289,85 +291,6 @@ function CeazarMark({ small = false }: { small?: boolean }) {
   );
 }
 
-function DesktopCursorTrail() {
-  const trailRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const layer = trailRef.current;
-    const desktop = layer?.parentElement;
-    if (!layer || !desktop || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const cursors = Array.from(layer.querySelectorAll<HTMLElement>('.pixel-cursor'));
-    const positions = cursors.map(() => ({ x: 0, y: 0 }));
-    const pointer = { x: 0, y: 0, active: false };
-    let frame = 0;
-
-    const animate = () => {
-      if (!pointer.active) {
-        frame = 0;
-        return;
-      }
-
-      let stillMoving = false;
-      positions.forEach((position, index) => {
-        const targetX = pointer.x - index * 5;
-        const targetY = pointer.y + index * 5;
-        const deltaX = targetX - position.x;
-        const deltaY = targetY - position.y;
-        if (index === 0) {
-          position.x = pointer.x;
-          position.y = pointer.y;
-        } else {
-          if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) stillMoving = true;
-          position.x += deltaX * 0.72;
-          position.y += deltaY * 0.72;
-        }
-        cursors[index].style.transform = `translate3d(${position.x - 2}px, ${position.y - 2}px, 0) scale(${1 - index * 0.1})`;
-      });
-
-      frame = stillMoving ? window.requestAnimationFrame(animate) : 0;
-    };
-
-    const hideTrail = () => {
-      pointer.active = false;
-      layer.classList.remove('cursor-trail-active');
-      if (frame) window.cancelAnimationFrame(frame);
-      frame = 0;
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') {
-        hideTrail();
-        return;
-      }
-
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
-      if (!pointer.active) {
-        pointer.active = true;
-        positions.forEach((position, index) => {
-          position.x = event.clientX - index * 5;
-          position.y = event.clientY + index * 5;
-        });
-        layer.classList.add('cursor-trail-active');
-      }
-      if (!frame) frame = window.requestAnimationFrame(animate);
-    };
-
-    desktop.addEventListener('pointermove', onPointerMove, { passive: true });
-    desktop.addEventListener('pointerleave', hideTrail);
-    desktop.addEventListener('pointercancel', hideTrail);
-    return () => {
-      desktop.removeEventListener('pointermove', onPointerMove);
-      desktop.removeEventListener('pointerleave', hideTrail);
-      desktop.removeEventListener('pointercancel', hideTrail);
-      hideTrail();
-    };
-  }, []);
-
-  return <div ref={trailRef} className="cursor-trail-layer" aria-hidden="true">{[0, 1, 2, 3].map((index) => <span className={`pixel-cursor pixel-cursor-${index + 1}`} key={index}><i /></span>)}</div>;
-}
-
 function AppBrandIcon({ app, size = 28 }: { app: RecentAppId; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', 'aria-hidden': true, focusable: false } as const;
   switch (app) {
@@ -420,12 +343,12 @@ function BootScreen({ onEnter }: { onEnter: () => void }) {
         <div className="boot-loader-group">
           <div className="boot-loader-label"><span>LOADING DESKTOP</span><span>PLEASE WAIT</span></div>
           <div className="boot-loader" role="progressbar" aria-label="Loading desktop">
-            <div className="boot-loader-track"><span /><span /><span /></div>
+            <div className="boot-loader-track"><span className="boot-loader-fill" onAnimationEnd={(event) => { if (event.animationName === 'loader-fill') window.setTimeout(onEnter, 140); }} /></div>
           </div>
           <div className="boot-wait"><span className="boot-status-dot" />Joshua's desktop is starting...</div>
         </div>
       </div>
-      <div className="boot-footer"><span>&copy; 2026 Joshua Ceazar Lopez</span><button type="button" onClick={onEnter}>Skip startup <RetroIcon name="chevron-right" size={14} /></button></div>
+      <div className="boot-footer"><span>&copy; 2026 Joshua Ceazar Lopez</span></div>
     </div>
   );
 }
@@ -505,6 +428,7 @@ function AboutContent() {
 function ProjectsContent({ selectedProject, navigateProject, navigateBack, isVisible }: { selectedProject: string | null; navigateProject: (id: string | null) => void; navigateBack: () => void; isVisible: boolean }) {
   const selected = projects.find((project) => project.id === selectedProject);
   const [activeSlide, setActiveSlide] = useState(0);
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!selected || !isVisible || selected.screenshots.length === 0) return;
@@ -529,13 +453,27 @@ function ProjectsContent({ selectedProject, navigateProject, navigateBack, isVis
   if (selected) {
     const slide = selected.screenshots[activeSlide] ?? selected.screenshots[0];
     const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + selected.screenshots.length) % selected.screenshots.length);
+    const handleGalleryTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+      const touch = event.changedTouches[0];
+      if (touch) swipeStart.current = { x: touch.clientX, y: touch.clientY };
+    };
+    const handleGalleryTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+      const start = swipeStart.current;
+      const touch = event.changedTouches[0];
+      swipeStart.current = null;
+      if (!start || !touch) return;
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      if (Math.abs(deltaX) < 42 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+      moveSlide(deltaX < 0 ? 1 : -1);
+    };
     return (
       <div className="project-detail-view">
         <div className="project-detail-heading">
           <div><span className="eyebrow">{selected.kind} · {selected.year}</span><h2>{selected.title}</h2></div>
         </div>
         <section className="project-gallery" aria-label={`${selected.title} screenshots`}>
-          <div className={`project-gallery-stage${selected.id === 'noti-fire' ? ' project-gallery-stage-phone' : ' project-gallery-stage-landscape'}`}>
+          <div className={`project-gallery-stage${selected.id === 'noti-fire' ? ' project-gallery-stage-phone' : ' project-gallery-stage-landscape'}`} onTouchStart={handleGalleryTouchStart} onTouchEnd={handleGalleryTouchEnd} onTouchCancel={() => { swipeStart.current = null; }}>
             <div className={`project-gallery-image-frame${selected.id === 'noti-fire' ? ' project-gallery-image-frame-phone' : ' project-gallery-image-frame-landscape'}`}>
               <img src={slide.src} alt={slide.alt} decoding="async" fetchPriority="high" />
             </div>
@@ -677,6 +615,7 @@ function App() {
   const [showStartMenu, setShowStartMenu] = useState(false);
   const [closingStartMenu, setClosingStartMenu] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
   const [windowStates, setWindowStates] = useState<Record<AppId, WindowState>>({ about: emptyWindow(), projects: emptyWindow(), certificates: emptyWindow(), contact: emptyWindow() });
   const [projectHistory, setProjectHistory] = useState<{ entries: (string | null)[]; index: number }>({ entries: [null], index: 0 });
   const selectedProject = projectHistory.entries[projectHistory.index] ?? null;
@@ -771,12 +710,6 @@ function App() {
   };
 
   useEffect(() => {
-    if (startupStage !== 'boot') return;
-    const timer = window.setTimeout(enterDesktop, 2500);
-    return () => window.clearTimeout(timer);
-  }, [startupStage, enterDesktop]);
-
-  useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 15000);
     return () => window.clearInterval(clock);
   }, []);
@@ -787,16 +720,36 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let countedThisSession = false;
+    try {
+      countedThisSession = window.sessionStorage.getItem(VISITOR_SESSION_KEY) === '1';
+      if (!countedThisSession) window.sessionStorage.setItem(VISITOR_SESSION_KEY, '1');
+    } catch {
+      // Continue without session deduplication when storage is unavailable.
+    }
+
+    const endpoint = new URL(VISITOR_COUNTER_URL);
+    endpoint.searchParams.set('unique', 'true');
+    endpoint.searchParams.set('readOnly', String(countedThisSession));
+    void fetch(endpoint, { headers: { Accept: 'application/json' } })
+      .then((response) => response.ok ? response.json() as Promise<{ value?: number | string }> : Promise.reject(new Error('Visitor counter unavailable')))
+      .then((data) => {
+        const value = typeof data.value === 'number' ? data.value : Number(data.value);
+        if (Number.isFinite(value)) setVisitorCount(value);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ') {
         if (startupStage === 'sleep') wakeComputer();
-        else if (startupStage === 'boot') enterDesktop();
       }
       if (event.key === 'Escape') closeStartMenu();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [startupStage, closeStartMenu, enterDesktop, wakeComputer]);
+  }, [startupStage, closeStartMenu, wakeComputer]);
 
   const restoreWindow = (id: AppId) => {
     const wasMinimized = windowStates[id].minimized || minimizeTimers.current[id] !== undefined;
@@ -945,8 +898,7 @@ function App() {
         <span className="wallpaper-field-sheen" />
       </div>
       <div className="desktop-vignette" />
-      <DesktopCursorTrail />
-      <div className="desktop-label"><CeazarMark small /><span>JOSHUA CEAZAR LOPEZ</span></div>
+      <div className="desktop-label" aria-live="polite"><span className="desktop-visitor-led" aria-hidden="true" /><span>VISITORS / <b>{visitorCount === null ? '—' : visitorCount.toLocaleString()}</b></span></div>
       <section className="desktop-hero" aria-label="Joshua Ceazar introduction">
         <div className="hero-portrait">
           <span className="portrait-orbit" />
