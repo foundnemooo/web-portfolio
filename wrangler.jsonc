@@ -1,8 +1,18 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "web-portfolio",
+  "main": "./worker/index.ts",
   "compatibility_date": "2026-11-03",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "VISITOR_LOOKBACK_DAYS": "180"
+  },
+  "secrets": {
+    "required": ["CF_API_TOKEN", "CF_ZONE_ID"]
   }
 }

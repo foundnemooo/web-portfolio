@@ -61,8 +61,6 @@ const ASSETS = {
   wallpaper: '/assets/xp-bliss-hd.jpg',
   resume: '/assets/Joshua_Ceazar_Lopez_Resume.pdf',
 };
-const VISITOR_COUNTER_URL = 'https://counterapi.com/api/joshdesk-portfolio/view/site-visitors';
-const VISITOR_SESSION_KEY = 'ceazar-visitor-counted-v1';
 
 const imagePreloadCache = new Map<string, Promise<void>>();
 
@@ -720,22 +718,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let countedThisSession = false;
-    try {
-      countedThisSession = window.sessionStorage.getItem(VISITOR_SESSION_KEY) === '1';
-      if (!countedThisSession) window.sessionStorage.setItem(VISITOR_SESSION_KEY, '1');
-    } catch {
-      // Continue without session deduplication when storage is unavailable.
-    }
-
-    const endpoint = new URL(VISITOR_COUNTER_URL);
-    endpoint.searchParams.set('unique', 'true');
-    endpoint.searchParams.set('readOnly', String(countedThisSession));
-    void fetch(endpoint, { headers: { Accept: 'application/json' } })
-      .then((response) => response.ok ? response.json() as Promise<{ value?: number | string }> : Promise.reject(new Error('Visitor counter unavailable')))
+    void fetch('/api/visitors', { headers: { Accept: 'application/json' } })
+      .then((response) => response.ok ? response.json() as Promise<{ visitors?: number }> : Promise.reject(new Error('Cloudflare visitor API unavailable')))
       .then((data) => {
-        const value = typeof data.value === 'number' ? data.value : Number(data.value);
-        if (Number.isFinite(value)) setVisitorCount(value);
+        if (typeof data.visitors === 'number' && Number.isFinite(data.visitors)) setVisitorCount(data.visitors);
       })
       .catch(() => undefined);
   }, []);
