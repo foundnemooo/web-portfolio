@@ -1,5 +1,6 @@
 const CLOUDFLARE_GRAPHQL_URL = 'https://api.cloudflare.com/client/v4/graphql';
 const DEFAULT_LOOKBACK_DAYS = 180;
+const MAX_AVAILABLE_LOOKBACK_DAYS = 28;
 // Cloudflare limits this adaptive dataset to roughly 4 weeks per query.
 // Keep a small margin below the documented maximum and combine the windows.
 const MAX_QUERY_WINDOW_DAYS = 28;
@@ -63,7 +64,8 @@ async function getVisitorTotal(env: Env) {
   }
 
   const end = new Date();
-  const lookbackDays = Number(env.VISITOR_LOOKBACK_DAYS) || DEFAULT_LOOKBACK_DAYS;
+  const requestedLookbackDays = Number(env.VISITOR_LOOKBACK_DAYS) || DEFAULT_LOOKBACK_DAYS;
+  const lookbackDays = Math.min(Math.max(requestedLookbackDays, 1), MAX_AVAILABLE_LOOKBACK_DAYS);
   const start = new Date(end.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
 
   let visitors = 0;
