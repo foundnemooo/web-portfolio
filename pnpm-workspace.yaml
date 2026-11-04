@@ -2,3 +2,4 @@ allowBuilds:
   esbuild: true
   sharp: false
   '@swc/core': false
+  workerd: false
